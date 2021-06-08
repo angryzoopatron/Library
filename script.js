@@ -1,50 +1,135 @@
+// button variables for event listeners
 const addBtn = document.querySelector('#addBtn');
-const newBtn = document.querySelector('#newBtn');
+const newBookBtn = document.querySelector('#newBtn');
 const popUpForm = document.getElementById('popUp');
-const closePopup = document.getElementsByTagName('span')[0];
+const closePopUp = document.getElementsByTagName('span')[0];
 
-
-function testFunction() {
-    console.log('poo');
-}
-
+//Book Constructor
 class Book {
-    constructor(title) {
-        this.title = form.title.value;
+    constructor(title, author, pages, read) {
+        this.title = title; 
+        this.author = author; 
+        this.pages = pages; 
+        this.read = read; 
     }
 }
 
-let library = [];
-let book;
+// library array for books
+let myLibrary = [];
 
-// create function to push books to library array
-function addBookToLibrary(e) {
-    e.preventDefault;
+// new book from constructor
+let newBook = new Book();
+
+// function to push book object to array
+function addBookToLibrary() {
     popUpForm.style.display = 'none';
-    book = new Book(title);
-    library.push(book);
 
+    newBook = {
+        title: form.title.value,
+        author: form.author.value,
+        pages: form.pages.value,
+        read: form.read.checked,
+    }
+
+
+    myLibrary.push(newBook); 
+    setData();  //saves updated array in local storage
+    displayBooks(); // will change to custom dispatch
     form.reset();
 }
 
+//Creates book visual in browser
 function displayBooks() {
     const display = document.getElementById('lib-container');
-    const books = document.querySelector('.book')
+    const books = document.querySelectorAll('.book');
+    books.forEach(book => display.removeChild(book));
+    
+    for (let i of myLibrary){
+        createBook(i);
+    }
 }
 
-function createBook() {
+//creates book DOM elements, to use in displayBooks();
+function createBook(item) {
+    const library = document.querySelector('#lib-container');
+    const bookDiv = document.createElement('div');
+    const titleDiv = document.createElement('div');
+    const authDiv = document.createElement('div');
+    const pageDiv = document.createElement('div');
+    const removeBtn = document.createElement('button');
+    const readBtn = document.createElement('button');
+    
+    
+    bookDiv.classList.add('book');
+    titleDiv.classList.add('title');
+    authDiv.classList.add('author');
+    pageDiv.classList.add('pages');
+    readBtn.classList.add('readBtn')    
 
+    bookDiv.setAttribute('id', myLibrary.indexOf(item));
+    removeBtn.setAttribute('id', 'removeBtn');
+    
+    titleDiv.textContent = item.title;
+    authDiv.textContent = item.author;
+    pageDiv.textContent = item.pages;
+    removeBtn.textContent = 'Remove'; 
+    
+    bookDiv.appendChild(titleDiv);
+    bookDiv.appendChild(authDiv);
+    bookDiv.appendChild(pageDiv);
+    bookDiv.appendChild(readBtn);
+
+    if(item.read === false) {
+        readBtn.textContent = 'Not Read';
+        readBtn.style.backgroundColor = 'red';
+    }else {
+        readBtn.textContent = 'Read';
+        readBtn.style.backgroundColor = 'green'
+    }
+    
+    bookDiv.appendChild(removeBtn);
+    
+    library.appendChild(bookDiv);
+
+    // remove book from DOM via splice from index
+    removeBtn.addEventListener('click', () => {
+        myLibrary.splice(myLibrary.indexOf(item),1);
+        setData()
+        displayBooks();
+    });
+    
+    // toggle read status onClick
+    readBtn.addEventListener('click', () => { 
+        item.read = !item.read; 
+        setData(); 
+        displayBooks();
+    }); 
+};
+
+// local storage needs objects converted to properly store data, json.stringify does so
+function setData() {
+    localStorage.setItem(`myLibrary`, JSON.stringify(myLibrary));
 }
 
+// restores state from local storage
+function restore() {
+    if(!localStorage.myLibrary) {
+        displayBooks();
+    }else {
+        let objects = localStorage.getItem('myLibrary') // gets information from local storage to use in below loop to create DOM/display
+        objects = JSON.parse(objects);
+        myLibrary = objects;
+        displayBooks();
+    }
+}
 
-addBtn.addEventListener('click', testFunction);
-newBtn.addEventListener('click', () => popUpForm.style.display = 'block');
+// event listeners
+addBtn.addEventListener('click', addBookToLibrary);
+newBookBtn.addEventListener('click', () => popUpForm.style.display = 'block');
 closePopUp.addEventListener('click', () => popUpForm.style.display = 'none');
 
+// will add dispatch below this comment to loosen coupling
 
 
-
-
-//  https://github.com/CatQueenCodes/Project-Library
-
-// referencing that for notes because I am an idiot
+// restore function
+restore();
